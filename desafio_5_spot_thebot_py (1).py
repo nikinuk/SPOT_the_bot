@@ -7,19 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1w-3ElKwn1AHcg8-Sra-EDEuvcDFn6o9X
 """
 
-#from google.colab import drive
-#drive.mount('/content/drive')
-
-from google.oauth2 import service_account
-from gsheetsdb import connect
-
-# Create a connection object.
-credentials = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"],
-    scopes=["https://www.googleapis.com/auth/spreadsheets"],
-)
-conn = connect(credentials=credentials)
-
 # Abrir VDB para RAC queries
 import chromadb
 chroma_client = chromadb.PersistentClient(path="/content/drive/MyDrive/i2a2/Desafio_5/Intellitools_vdb")
@@ -29,28 +16,33 @@ collection = chroma_client.get_collection(name="intellitools_collection")
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from google.colab import output
-output.enable_custom_widget_manager()
+#from google.colab import output
+#output.enable_custom_widget_manager()
 from peft import PeftModel
 
-def LoadModel(base_model_id, bnb_config, qLoRA_checkpoint ):
-  model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config )
-  model = PeftModel.from_pretrained(model, qLoRA_checkpoint)
-  return model
+#def LoadModel(base_model_id, bnb_config, qLoRA_checkpoint ):
+#  model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config )
+#  model = PeftModel.from_pretrained(model, qLoRA_checkpoint)
+#  return model
 
-base_model_id = "mistralai/Mistral-7B-v0.1"
-qLoRA_checkpoint = "/content/drive/MyDrive/i2a2/Desafio_5/mistral-Intellitools/checkpoint-225"
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16)
+#base_model_id = "mistralai/Mistral-7B-v0.1"
 
-model = LoadModel(base_model_id, bnb_config, qLoRA_checkpoint)
+modelID = "nikinuk/spot_m7b_q4_qlora_cp50"
+
+#qLoRA_checkpoint = "/content/drive/MyDrive/i2a2/Desafio_5/mistral-Intellitools/checkpoint-225"
+#bnb_config = BitsAndBytesConfig(
+#    load_in_4bit=True,
+#    bnb_4bit_use_double_quant=True,
+#    bnb_4bit_quant_type="nf4",
+#    bnb_4bit_compute_dtype=torch.bfloat16)
+
+#model = LoadModel(base_model_id, bnb_config, qLoRA_checkpoint)
+model = LoadModel(modelID)
 
 # Abrir tokenizer
 
-tokenizer = AutoTokenizer.from_pretrained(base_model_id, trust_remote_code=True)
+#tokenizer = AutoTokenizer.from_pretrained(base_model_id, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(modelID)
 tokenizer.pad_token = tokenizer.eos_token
 
 # Prompt Template
