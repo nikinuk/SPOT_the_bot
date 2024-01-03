@@ -9,46 +9,37 @@ Original file is located at
 
 # Abrir VDB para RAC queries
 import chromadb
-chroma_client = chromadb.PersistentClient(path="/content/drive/MyDrive/i2a2/Desafio_5/Intellitools_vdb")
+chroma_client = chromadb.PersistentClient(path="/vdb_intellitools_wiki")
 collection = chroma_client.get_collection(name="intellitools_collection")
 
 # Abrir modelo
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-#from google.colab import output
-#output.enable_custom_widget_manager()
 from peft import PeftModel
 
-#def LoadModel(base_model_id, bnb_config, qLoRA_checkpoint ):
-#  model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config )
-#  model = PeftModel.from_pretrained(model, qLoRA_checkpoint)
-#  return model
+def LoadModel(base_model_id, bnb_config, qLoRA_checkpoint ):
+  model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config )
+  model = PeftModel.from_pretrained(model, qLoRA_checkpoint)
+  return model
 
-#base_model_id = "mistralai/Mistral-7B-v0.1"
+base_model_id = "mistralai/Mistral-7B-v0.1"
+qLoRA_checkpoint = "nikinuk/spot_m7b_q4_qlora_cp50"
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16)
 
-modelID = "nikinuk/spot_m7b_q4_qlora_cp50"
-
-#qLoRA_checkpoint = "/content/drive/MyDrive/i2a2/Desafio_5/mistral-Intellitools/checkpoint-225"
-#bnb_config = BitsAndBytesConfig(
-#    load_in_4bit=True,
-#    bnb_4bit_use_double_quant=True,
-#    bnb_4bit_quant_type="nf4",
-#    bnb_4bit_compute_dtype=torch.bfloat16)
-
-#model = LoadModel(base_model_id, bnb_config, qLoRA_checkpoint)
-model = LoadModel(modelID)
+model = LoadModel(base_model_id, bnb_config, qLoRA_checkpoint)
 
 # Abrir tokenizer
-
-#tokenizer = AutoTokenizer.from_pretrained(base_model_id, trust_remote_code=True)
-tokenizer = AutoTokenizer.from_pretrained(modelID)
+tokenizer = AutoTokenizer.from_pretrained(qLoRA_checkpoint)
 tokenizer.pad_token = tokenizer.eos_token
 
 # Prompt Template
 
 def prompter_RAC(prompt, name="Nicholas"):
-
     q_result = collection.query(
         query_texts=[prompt],
         n_results = 1,
@@ -105,12 +96,6 @@ def update_assistant(old, new):
     old = old + [ { "role": "assistant", "content": new } ]
     return old
 
-def set_avatar(user):
-    if user == "user":
-        return "😟"
-    else:
-        return p[psycho]["avatar"]
-
 # FIXED SITE HEADER
 
 # Initialize chat history
@@ -141,7 +126,7 @@ if prompt := st.chat_input("Me diga como posso ajudar."):
             st.write(prompt)
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
-        # RUN GPT
+        # RUN MODEL
         completion = AKA(prompter_RAC(prompt))
         chat_response = completion
 
