@@ -7,8 +7,18 @@ Original file is located at
     https://colab.research.google.com/drive/1w-3ElKwn1AHcg8-Sra-EDEuvcDFn6o9X
 """
 
-from google.colab import drive
-drive.mount('/content/drive')
+#from google.colab import drive
+#drive.mount('/content/drive')
+
+from google.oauth2 import service_account
+from gsheetsdb import connect
+
+# Create a connection object.
+credentials = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"],
+    scopes=["https://www.googleapis.com/auth/spreadsheets"],
+)
+conn = connect(credentials=credentials)
 
 # Abrir VDB para RAC queries
 import chromadb
